@@ -1,0 +1,37 @@
+{@ $wi = $widget_info; 
+$no1 = $wi->b_no; 
+$no2 = $wi->a_no; }
+
+<load target="style.css" />
+
+<div cond="$wi->top_title" class="universal-h2" style="color:{$wi->title_font_color}; font-size:{$wi->top_title_size}">{$wi->top_title}</div>
+<div class="before-box">
+	<div class="inner" style="max-width:{$wi->w_size}">
+		<div class="comparison-slider">
+			<!--@foreach($box_list as $key => $val)-->
+				{@ $oDocument = $oDocumentModel->getDocument($val->document_srl)}
+				{@ $uploaded_images = array()}
+				<!--@if($oDocument->hasUploadedFiles())-->
+					<!--@foreach($oDocument->getUploadedFiles() as $key => $val)-->
+						{@ $filename = strtolower($val->uploaded_filename)}
+						<!--@if((substr($filename,-3)=='gif' || substr($filename,-3)=='jpg' || substr($filename,-3)=='png' || substr($filename,-4)=='jfif'))-->
+						{@ $uploaded_images[] = $val->uploaded_filename}
+						<!--@end-->
+					<!--@end-->
+				<!--@end-->
+					{@ $gallery_image = $uploaded_images[$no1]}
+					<figure>
+						<img src="{$gallery_image}" />
+						<figcaption cond="$wi->l_text"><a href="{getUrl('','document_srl',$oDocument->document_srl)}">{$wi->l_text}</a></figcaption>
+					</figure>
+					{@ $gallery_image = $uploaded_images[$no2]}
+					<figure>
+						<img src="{$gallery_image}" />
+						<figcaption cond="$wi->r_text"><a href="{getUrl('','document_srl',$oDocument->document_srl)}">{$wi->r_text}</a></figcaption>
+					</figure>
+			<!--@end-->
+		</div>
+	</div>
+</div>
+
+<script src="main.js"></script>
