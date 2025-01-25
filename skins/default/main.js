@@ -1,89 +1,72 @@
 jQuery(function ($) {
-	(document).querySelectorAll(".comparison-slider").forEach((element) => {
-    const slider = document.createElement("div");
-    const resizeElement = element.getElementsByTagName("figure")[1];
-    if (!resizeElement) return;
-    const figcaption = {
-        first: element.getElementsByTagName("figcaption")[0],
-        second: element.getElementsByTagName("figcaption")[1],
-    };
-    const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    document.querySelectorAll(".comparison-slider").forEach((element) => {
+        const slider = document.createElement("div");
+        const resizeElement = element.getElementsByTagName("figure")[1];
+        if (!resizeElement) return;
 
-    let ticking = false;
+        const figcaption = {
+            first: element.getElementsByTagName("figcaption")[0],
+            second: element.getElementsByTagName("figcaption")[1],
+        };
 
-    const slide = (event) => {
-        if (!ticking) {
-            ticking = true;
-            requestAnimationFrame(() => {
-                ticking = false;
+        const arrow = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 
-                // sliding image
-                const clientX = event.clientX ?? event.touches[0].clientX;
-                const x = clientX - element.offsetLeft;
-                let percentage = ((x / element.offsetWidth) * 10000) / 100;
+        const slide = (event) => {
+            const clientX = event.clientX ?? event.touches[0].clientX;
+            const rect = element.getBoundingClientRect();
+            let x = clientX - rect.left;
+            
+            // 화살표가 완전히 왼쪽으로 이동할 수 있도록 수정
+            x = Math.max(0, Math.min(x, rect.width));
+            
+            const percentage = (x / rect.width) * 100;
 
-                if (percentage >= 100) {
-                    percentage = 100;
-                }
-                if (percentage <= 0) {
-                    percentage = 0;
-                }
+            slider.style.left = `${percentage}%`;
+            resizeElement.style.clipPath = `polygon(${percentage}% 0, 100% 0, 100% 100%, ${percentage}% 100%)`;
 
-                slider.style.left = `${percentage}%`;
-                resizeElement.style.clipPath = `polygon(${percentage}% 0, 100% 0, 100% 100%, ${percentage}% 100%)`;
+            // 캡션 처리 개선
+            if (figcaption.first) {
+                figcaption.first.classList.toggle("hide", x <= figcaption.first.offsetWidth);
+            }
 
-                // hiding figcaption
-                if (figcaption.first) {
-                    if (x <= figcaption.first.offsetWidth) {
-                        figcaption.first.classList.add("hide");
-                    } else {
-                        figcaption.first.classList.remove("hide");
-                    }
-                }
+            if (figcaption.second) {
+                figcaption.second.classList.toggle("hide", rect.width - x <= figcaption.second.offsetWidth);
+            }
+        };
 
-                if (figcaption.second) {
-                    if (
-                        element.offsetWidth - x <=
-                        figcaption.second.offsetWidth
-                    ) {
-                        figcaption.second.classList.add("hide");
-                    } else {
-                        figcaption.second.classList.remove("hide");
-                    }
-                }
-            });
-        }
-    };
-    const dragStart = () => {
-        element.addEventListener("mousemove", slide, { passive: true });
-        element.addEventListener("touchmove", slide, { passive: true });
-        element.classList.add("dragging");
-    };
-    const dragDone = () => {
-        element.removeEventListener("mousemove", slide);
-        element.removeEventListener("touchmove", slide);
-        element.classList.remove("dragging");
-    };
+        const dragStart = (event) => {
+            event.preventDefault();
+            document.addEventListener("mousemove", slide);
+            document.addEventListener("touchmove", slide);
+            element.classList.add("dragging");
+        };
 
-    slider.addEventListener("mousedown", dragStart, { passive: true });
-    slider.addEventListener("touchstart", dragStart, { passive: true });
+        const dragDone = () => {
+            document.removeEventListener("mousemove", slide);
+            document.removeEventListener("touchmove", slide);
+            element.classList.remove("dragging");
+        };
 
-    document.addEventListener("mouseup", dragDone, { passive: true });
-    document.addEventListener("touchend", dragDone, { passive: true });
-    document.addEventListener("touchcancel", dragDone, { passive: true });
+        slider.addEventListener("mousedown", dragStart);
+        slider.addEventListener("touchstart", dragStart);
 
-    slider.classList.add("slider");
-    arrow.setAttribute("width", "20");
-    arrow.setAttribute("height", "20");
-    arrow.setAttribute("viewBox", "0 0 30 30");
-    path.setAttribute(
-        "d",
-        "M1,14.9l7.8-7.6v4.2h12.3V7.3l7.9,7.6l-7.9,7.7v-4.2H8.8v4.2L1,14.9z"
-    );
-    arrow.append(path);
-    slider.append(arrow);
+        document.addEventListener("mouseup", dragDone);
+        document.addEventListener("touchend", dragDone);
+        document.addEventListener("touchcancel", dragDone);
 
-    element.append(slider);
-});
+        // 슬라이더 및 화살표 설정
+        slider.classList.add("slider");
+        arrow.setAttribute("width", "20");
+        arrow.setAttribute("height", "20");
+        arrow.setAttribute("viewBox", "0 0 30 30");
+        path.setAttribute(
+            "d",
+            "M1,14.9l7.8-7.6v4.2h12.3V7.3l7.9,7.6l-7.9,7.7v-4.2H8.8v4.2L1,14.9z"
+        );
+        arrow.append(path);
+        slider.append(arrow);
+
+        element.append(slider);
+    });
 });
